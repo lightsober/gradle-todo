@@ -1,0 +1,95 @@
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.8
+
+    apply plugin: 'maven-publish'
+
+    publishing {
+        publications {
+            myPublish(MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                name "myRepo"
+                url ""
+            }
+        }
+    }
+}
+
+subprojects {
+    repositories {
+        mavenLocal()
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    }
+    dependencies {
+        compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+}
+
+repositories {
+    mavenLocal()
+    //mavenCentral()
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+}
+
+dependencies {
+    //排除一个传递性依赖
+    compile('org.hibernate:hibernate-core:3.6.3.Final') {
+        exclude group: "org.slf4j", module: "slf4j-api"
+        //transitive=false 排除所有的传递性依赖，不建议使用
+    }
+}
+
+def createDir = {
+    path ->
+        File dir = new File(path)
+        if (!dir.exists()) {
+            dir.mkdir()
+        }
+}
+task makeJavaDir() {
+    def paths = ['src/main/java', 'src/main/resources',
+                 'src/test/java', 'src/test/resources']
+    doFirst {
+        paths.forEach(createDir)
+    }
+}
+
+task makeWebDir() {
+    dependsOn 'makeJavaDir'
+    def paths = ['src/main/webapp', 'src/test/webapp']
+    doLast {
+        paths.forEach(createDir)
+    }
+}
+
+//强制 指定一个版本
+//configurations.all {
+//    resolutionStrategy {
+//        force 'org.slf4j:slf4j-api:1.7.24'
+//    }
+//}
+
+//修改默认 版本冲突解决策略
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
+        force 'org.slf4j:slf4j-api:1.7.24'
+    }
+}
+
+// TODO 所有项目中应用Java插件
+// TODO web子项目打包成WAR
+// TODO 所有项目添加logback 日志功能
+// TODO 统一配置group和version
+
+
+

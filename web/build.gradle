@@ -1,0 +1,11 @@
+
+
+apply plugin: 'war' //官网查看官方文档
+
+repositories {
+    //mavenCentral()
+}
+
+dependencies {
+    compile project(":repository")
+}
